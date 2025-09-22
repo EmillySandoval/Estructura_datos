@@ -1,3 +1,4 @@
+// JavaScript
 const ROWS = 6;
 const COLS = 7;
 let board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
@@ -27,8 +28,12 @@ function handleClick(e) {
         `.cell[data-row="${row}"][data-col="${col}"]`
       );
       cell.classList.add(currentPlayer);
+
       if (checkWin(row, col)) {
         statusText.textContent = `¡${currentPlayer === 'red' ? '🔴' : '🟡'} gana!`;
+        gameBoard.style.pointerEvents = 'none';
+      } else if (checkDraw()) {
+        statusText.textContent = '¡Empate! 🤝';
         gameBoard.style.pointerEvents = 'none';
       } else {
         currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
@@ -65,4 +70,8 @@ function checkWin(row, col) {
     if (count >= 4) return true;
   }
   return false;
+}
+
+function checkDraw() {
+  return board.every(row => row.every(cell => cell !== null));
 }
