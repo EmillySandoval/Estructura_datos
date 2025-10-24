@@ -1,0 +1,15 @@
+# depslib dependency file v1.0
+1761171922 source:c:\users\luisi\desktop\trabajos codeblocks\mini proyecto(busqueda te)\main.cpp
+	<iostream>
+	<cstdlib>
+	<ctime>
+	<conio.h>
+	<windows.h>
+	<vector>
+	<chrono>
+	<thread>
+	<iomanip>
+	<fstream>
+	<algorithm>
+	<sstream>
+
