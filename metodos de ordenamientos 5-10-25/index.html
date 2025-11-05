@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Algoritmos de Ordenamiento</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Comparador de Algoritmos de Ordenamiento</h1>
+            <p class="subtitle">Prueba 9 algoritmos con diferentes tamaños de datos</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="form-group">
+                <label for="dataSize">Cantidad de números:</label>
+                <select id="dataSize">
+                    <option value="100">100 números</option>
+                    <option value="1000">1,000 números</option>
+                    <option value="10000">10,000 números</option>
+                    <option value="100000">100,000 números</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button id="testSorted" class="test-btn">Probar Ordenados</button>
+                <button id="testPartially" class="test-btn">Probar Medianamente</button>
+                <button id="testReversed" class="test-btn">Probar Inversos</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loading-text">Procesando...</p>
+        </div>
+
+        <div class="results-section">
+            <div class="ranking-section">
+                <h2>Ranking de Tiempos (ms)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Algoritmo</th>
+                            <th>Tiempo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-body">
+                        <tr>
+                            <td colspan="3" class="no-data">Selecciona un escenario para probar</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="chart-section">
+                <h2>Comparación Gráfica</h2>
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+
+        <div class="array-section">
+            <h2>Array Ordenado Resultante</h2>
+            <div class="array-container">
+                <div id="array-content">[Los números ordenados aparecerán aquí]</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
