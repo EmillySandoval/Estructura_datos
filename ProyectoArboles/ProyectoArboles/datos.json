@@ -1,0 +1,10 @@
+{
+  "raiz": {
+    "id": "abc123",
+    "nombre": "root",
+    "tipo": "carpeta",
+    "contenido": "",
+    "hijos": []
+  },
+  "papelera": []
+}
