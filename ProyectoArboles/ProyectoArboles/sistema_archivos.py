@@ -1,4 +1,5 @@
 import uuid
+from busqueda_trie import SistemaBusqueda
 
 class Nodo:
     # Clase que representa un nodo en el sistema de archivos
@@ -58,16 +59,21 @@ class Nodo:
 class Arbol:
     # Clase principal que maneja el arbol de archivos y carpetas
     
+    
     def __init__(self):
         self.raiz = None
-        self.nodos = {}  # Diccionario para busqueda rapida por id
-        self.papelera = []  # Papelera temporal para eliminados
-    
-    def crear_raiz(self, nombre="root"):
-        # Crea el nodo raiz del sistema
+        self.nodos = {}
+        self.papelera = []
+        self.busqueda = SistemaBusqueda()  
+        
+    def  crear_raiz(self, nombre="root"):
         id_nodo = str(uuid.uuid4())[:8]
         self.raiz = Nodo(id_nodo, nombre, "carpeta")
         self.nodos[id_nodo] = self.raiz
+        
+        # NUEVO: Indexar la raiz en el sistema de busqueda
+        self.busqueda.indexar_nodo(nombre, id_nodo)
+        
         return self.raiz
     
     def crear_nodo(self, nombre, tipo, ruta_padre="/", contenido=""):
@@ -86,11 +92,13 @@ class Arbol:
             if hijo.nombre == nombre:
                 return None
         
-        # Crear nuevo nodo
         id_nodo = str(uuid.uuid4())[:8]
         nuevo_nodo = Nodo(id_nodo, nombre, tipo, contenido)
         padre.agregar_hijo(nuevo_nodo)
         self.nodos[id_nodo] = nuevo_nodo
+        
+        # NUEVO: Indexar en sistema de busqueda
+        self.busqueda.indexar_nodo(nombre, id_nodo)
         
         return nuevo_nodo
     
@@ -129,6 +137,48 @@ class Arbol:
         
         return actual
     
+    def buscar_autocompletado(self, prefijo, max_resultados=10):
+        resultado_busqueda = self.busqueda.buscar_autocompletado(prefijo, max_resultados)
+        
+        resultados_enriquecidos = []
+        for item in resultado_busqueda["resultados"]:
+            nodo = self.buscar_por_id(item["id_nodo"])
+            if nodo:
+                resultados_enriquecidos.append({
+                    "nombre": nodo.nombre,
+                    "tipo": nodo.tipo,
+                    "ruta": nodo.obtener_ruta(),
+                    "id": nodo.id
+                })
+        
+        return {
+            "prefijo": resultado_busqueda["prefijo"],
+            "resultados": resultados_enriquecidos,
+            "total_encontrados": resultado_busqueda["total_encontrados"],
+            "mostrando": len(resultados_enriquecidos)
+        }
+    
+    def buscar_exacta(self, nombre):
+        resultado_busqueda = self.busqueda.buscar_exacta(nombre)
+        
+        resultados_enriquecidos = []
+        for id_nodo in resultado_busqueda["ids_nodos"]:
+            nodo = self.buscar_por_id(id_nodo)
+            if nodo:
+                resultados_enriquecidos.append({
+                    "nombre": nodo.nombre,
+                    "tipo": nodo.tipo,
+                    "ruta": nodo.obtener_ruta(),
+                    "id": nodo.id,
+                    "contenido": nodo.contenido if nodo.tipo == "archivo" else ""
+                })
+        
+        return {
+            "nombre": resultado_busqueda["nombre"],
+            "resultados": resultados_enriquecidos,
+            "total_encontrados": len(resultados_enriquecidos)
+        }
+    
     def eliminar_nodo(self, ruta):
         # Elimina un nodo moviendolo a la papelera
         nodo = self.buscar_por_ruta(ruta)
@@ -147,18 +197,22 @@ class Arbol:
             "ruta_original": nodo.obtener_ruta()
         })
         
+        self.busqueda.eliminar_nodo(nodo.nombre, nodo.id)
+        
         # Eliminar recursivamente del diccionario
         self._eliminar_recursivo(nodo)
         
         return True
     
     def _eliminar_recursivo(self, nodo):
-        # Elimina recursivamente un nodo y sus hijos del diccionario
         if nodo.id in self.nodos:
+            # NUEVO: Eliminar este nodo y sus hijos del sistema de busqueda
+            for hijo in nodo.hijos:
+                self._eliminar_recursivo(hijo)
+            
+            # NUEVO: Eliminar este nodo
+            self.busqueda.eliminar_nodo(nodo.nombre, nodo.id)
             del self.nodos[nodo.id]
-        
-        for hijo in nodo.hijos:
-            self._eliminar_recursivo(hijo)
     
     def mover_nodo(self, ruta_origen, ruta_destino):
         # Mueve un nodo a una nueva ubicacion
@@ -205,6 +259,10 @@ class Arbol:
             if hermano != nodo and hermano.nombre == nuevo_nombre:
                 return False
         
+        nombre_viejo = nodo.nombre
+        self.busqueda.actualizar_nodo(nombre_viejo, nuevo_nombre, nodo.id)
+        
+        # Actualizar nombre
         nodo.nombre = nuevo_nombre
         return True
     
@@ -304,11 +362,16 @@ class Arbol:
         if self.raiz:
             contar_nodos(self.raiz)
         
+        # NUEVO: Estadisticas de busqueda
+        stats_busqueda = self.busqueda.estadisticas()
+        
         return {
             "total_nodos": total_nodos,
             "carpetas": total_carpetas,
             "archivos": total_archivos,
             "bytes_contenido": total_contenido,
             "altura": self.altura(),
-            "papelera": len(self.papelera)
+            "papelera": len(self.papelera),
+            "busqueda_palabras": stats_busqueda["total_palabras_trie"],  # NUEVO
+            "busqueda_entradas": stats_busqueda["total_entradas_hashmap"]  # NUEVO
         }

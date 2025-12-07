@@ -1,5 +1,10 @@
 import os
 import sys
+from pathlib import Path
+
+# Añadir el directorio actual al path
+sys.path.insert(0, str(Path(__file__).parent))
+
 from sistema_archivos import Arbol
 from persistencia import Persistencia
 
@@ -24,7 +29,8 @@ class CMD_Simulator:
         if self.ruta_actual == "/":
             prompt = "C:\\> "
         else:
-            prompt = f"C:{self.ruta_actual.replace('/', '\\')}> "
+            ruta_windows = self.ruta_actual.replace('/', '\\')
+            prompt = f"C:{ruta_windows}> "
         return prompt
     
     def ejecutar_comando(self, comando):
@@ -68,6 +74,12 @@ class CMD_Simulator:
             self.comando_history()
         elif cmd == "tree":
             self.comando_tree(args)
+        elif cmd == "search":  # NUEVO: comando de busqueda
+            self.comando_search(args)
+        elif cmd == "find":    # NUEVO: alias para busqueda exacta
+            self.comando_find(args)
+        elif cmd == "test-trie":  # NUEVO: comando de prueba del Trie
+            self.comando_test_trie(args)
         else:
             print(f"Comando no reconocido: '{cmd}'. Escribe 'help' para ver comandos disponibles.")
     
@@ -317,6 +329,96 @@ class CMD_Simulator:
         # Muestra el arbol de directorios
         ruta = args[0] if args else self.ruta_actual
         
+        def comando_search(self, args):
+         if len(args) < 1:
+            print("Uso: search <prefijo> [max_resultados]")
+            print("     search doc  (busca nombres que empiecen con 'doc')")
+            print("     search doc 5  (maximo 5 resultados)")
+            return
+        
+        prefijo = args[0]
+        max_resultados = int(args[1]) if len(args) > 1 else 10
+        
+        print(f"\nBuscando nombres que empiecen con: '{prefijo}'")
+        print("-" * 50)
+        
+        resultados = self.arbol.buscar_autocompletado(prefijo, max_resultados)
+        
+        if resultados["resultados"]:
+            print(f"Encontrados: {resultados['total_encontrados']}")
+            print(f"Mostrando: {resultados['mostrando']}\n")
+            
+            for i, item in enumerate(resultados["resultados"], 1):
+                tipo = "[DIR]" if item["tipo"] == "carpeta" else "[FILE]"
+                print(f"{i:2}. {tipo} {item['nombre']}")
+                print(f"    Ruta: {item['ruta']}")
+                print()
+        else:
+            print("No se encontraron resultados.")
+        
+        print("-" * 50)
+    
+    def comando_find(self, args):
+        if len(args) < 1:
+            print("Uso: find <nombre_exacto>")
+            print("     find notas.txt  (busca exactamente 'notas.txt')")
+            return
+        
+        nombre = args[0]
+        
+        print(f"\nBuscando nombre exacto: '{nombre}'")
+        print("-" * 50)
+        
+        resultados = self.arbol.buscar_exacta(nombre)
+        
+        if resultados["resultados"]:
+            print(f"Encontrados: {resultados['total_encontrados']}\n")
+            
+            for i, item in enumerate(resultados["resultados"], 1):
+                tipo = "[DIR]" if item["tipo"] == "carpeta" else "[FILE]"
+                print(f"{i:2}. {tipo} {item['nombre']}")
+                print(f"    Ruta: {item['ruta']}")
+                
+                if item["tipo"] == "archivo" and item["contenido"]:
+                    contenido_preview = item["contenido"][:50]
+                    print(f"    Contenido: {contenido_preview}")
+                    if len(item["contenido"]) > 50:
+                        print("             ...")
+                print()
+        else:
+            print("No se encontraron resultados.")
+        
+        print("-" * 50)
+    
+    def comando_test_trie(self, args):
+        print("\n=== PRUEBA DEL SISTEMA DE BUSQUEDA ===")
+        
+        if self.arbol.tamano() < 5:
+            print("Creando datos de prueba...")
+            self.arbol.crear_nodo("documento1.txt", "archivo", "/", "Contenido 1")
+            self.arbol.crear_nodo("documento2.txt", "archivo", "/", "Contenido 2")
+            self.arbol.crear_nodo("documentos", "carpeta", "/")
+            self.arbol.crear_nodo("doc_especial.pdf", "archivo", "/documentos", "PDF especial")
+            self.arbol.crear_nodo("imagen.jpg", "archivo", "/", "Imagen JPEG")
+        
+        stats = self.arbol.busqueda.estadisticas()
+        print(f"Palabras en Trie: {stats['total_palabras_trie']}")
+        print(f"Entradas en HashMap: {stats['total_entradas_hashmap']}")
+        
+        print("\nProbando autocompletado con prefijo 'doc':")
+        resultados = self.arbol.buscar_autocompletado("doc", 10)
+        print(f"Encontrados: {resultados['total_encontrados']}")
+        
+        for item in resultados["resultados"]:
+            tipo = "[DIR]" if item["tipo"] == "carpeta" else "[FILE]"
+            print(f"  {tipo} {item['nombre']} -> {item['ruta']}")
+        
+        print("\nProbando busqueda exacta 'documento1.txt':")
+        resultados_exacta = self.arbol.buscar_exacta("documento1.txt")
+        print(f"Encontrados: {resultados_exacta['total_encontrados']}")
+        
+        print("\n=== FIN DE PRUEBA ===")
+        
         def mostrar_arbol_rec(nodo, nivel=0, prefijo=""):
             if nivel == 0:
                 print(f"{nodo.nombre}/")
@@ -331,17 +433,16 @@ class CMD_Simulator:
                 else:
                     print(f"{prefijo}{'└── ' if es_ultimo else '├── '}{hijo.nombre}")
         
-        nodo = self.arbol.buscar_por_ruta(ruta)
+        nodo = self.arbol.raiz
         if nodo and nodo.tipo == "carpeta":
             mostrar_arbol_rec(nodo)
         else:
-            print(f"Error: Ruta no valida o no es carpeta: {ruta}")
+            print("Error: No hay carpeta raiz en el arbol")
     
     def mostrar_ayuda(self):
-        # Muestra la ayuda con todos los comandos disponibles
         print("\n=== COMANDOS DISPONIBLES ===")
         print("Sistema de archivos jerarquico - Simulador CMD")
-        print("=" * 40)
+        print("=" * 50)
         
         comandos = [
             ("mkdir <nombre>", "Crear nueva carpeta"),
@@ -353,9 +454,12 @@ class CMD_Simulator:
             ("mv <origen> <destino>", "Mover archivo/carpeta"),
             ("rm <ruta>", "Eliminar archivo/carpeta (papelera)"),
             ("rename <ruta> <nuevo_nombre>", "Renombrar archivo/carpeta"),
+            ("search <prefijo> [max]", "Buscar con autocompletado"),  # NUEVO
+            ("find <nombre_exacto>", "Busqueda exacta"),  # NUEVO
             ("export preorden [archivo]", "Exportar recorrido preorden"),
             ("tree [ruta]", "Mostrar arbol de directorios"),
             ("stats", "Mostrar estadisticas del sistema"),
+            ("test-trie", "Probar sistema de busqueda"),  # NUEVO
             ("clear / cls", "Limpiar pantalla"),
             ("history", "Mostrar historial de comandos"),
             ("help / ?", "Mostrar esta ayuda"),
@@ -365,14 +469,12 @@ class CMD_Simulator:
         for comando, descripcion in comandos:
             print(f"{comando:30} - {descripcion}")
         
-        print("\n=== SINTAXIS DE RUTAS ===")
-        print("/                    Raiz del sistema")
-        print("carpeta/             Ruta relativa desde actual")
-        print("/carpeta/subcarpeta  Ruta absoluta")
-        print("..                   Directorio padre")
-        print(".                    Directorio actual")
-        print("=" * 40)
-    
+        print("\n=== NUEVOS COMANDOS DIA 5-6 ===")  # NUEVA SECCION
+        print("search <prefijo>    - Busqueda con autocompletado (Trie)")
+        print("find <nombre>       - Busqueda exacta (HashMap)")
+        print("test-trie           - Probar sistema de busqueda")
+        print("=" * 50)
+        
     def salir(self):
         # Guarda y sale del programa
         print("Guardando datos...")
@@ -381,14 +483,19 @@ class CMD_Simulator:
         self.ejecutando = False
     
     def iniciar(self):
-        # Inicia el simulador de linea de comandos
+           
         print("========================================")
         print("   SIMULADOR CMD - SISTEMA DE ARCHIVOS")
+        print("========================================")
+        print("DIA 5-6: Trie y Busqueda implementados")  # NUEVO
+        print("========================================")
+        print("Nuevos comandos: search, find, test-trie")  # NUEVO
         print("========================================")
         print("Escribe 'help' para ver comandos disponibles")
         print("Escribe 'exit' para salir")
         print("========================================\n")
         
+       
         while self.ejecutando:
             try:
                 entrada = input(self.mostrar_prompt())

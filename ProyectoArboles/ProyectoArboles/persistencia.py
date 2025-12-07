@@ -1,5 +1,11 @@
 import json
 import os
+import sys
+from pathlib import Path
+
+# Añadir el directorio actual al path
+sys.path.insert(0, str(Path(__file__).parent))
+
 from sistema_archivos import Arbol, Nodo
 
 class Persistencia:
@@ -9,18 +15,35 @@ class Persistencia:
         self.archivo = archivo
     
     def guardar_automatico(self, arbol):
-        # Guarda el arbol automaticamente en JSON
         try:
-            if arbol.raiz:
-                datos = {
-                    "raiz": arbol.raiz.to_dict(),
-                    "papelera": arbol.papelera
-                }
-                
-                with open(self.archivo, 'w', encoding='utf-8') as f:
-                    json.dump(datos, f, indent=2, ensure_ascii=False)
-                
-                return True
+            # Preparar estructura por defecto
+            datos = {}
+
+            # Guardar raiz si existe
+            if getattr(arbol, 'raiz', None):
+                datos['raiz'] = arbol.raiz.to_dict()
+
+            # Guardar papelera (si no existe, usar estructura vacía compatible)
+            datos['papelera'] = getattr(arbol, 'papelera', {})
+
+            # Guardar sistema de búsqueda si está disponible
+            busqueda = getattr(arbol, 'busqueda', None)
+            if busqueda is not None:
+                # Intentar serializar con to_dict si existe
+                if hasattr(busqueda, 'to_dict'):
+                    try:
+                        datos['busqueda'] = busqueda.to_dict()
+                    except Exception:
+                        # Si falla la serialización, guardar None para evitar excepción
+                        datos['busqueda'] = None
+                else:
+                    datos['busqueda'] = None
+
+            # Guarda el arbol automaticamente en JSON
+            with open(self.archivo, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, indent=2, ensure_ascii=False)
+
+            return True
         except Exception as e:
             print(f"Error al guardar: {e}")
             return False
@@ -39,14 +62,20 @@ class Persistencia:
             # Cargar raiz
             if "raiz" in datos:
                 arbol.raiz = Nodo.from_dict(datos["raiz"])
-                # Reconstruir diccionario de nodos
                 self._reconstruir_diccionario(arbol, arbol.raiz)
             
             # Cargar papelera
             if "papelera" in datos:
                 arbol.papelera = datos["papelera"]
             
+            # NUEVO: Cargar sistema de busqueda
+            if "busqueda" in datos:
+                from busqueda_trie import SistemaBusqueda
+                arbol.busqueda = SistemaBusqueda.from_dict(datos["busqueda"])
+            
             return arbol
+       
+           
         except Exception as e:
             print(f"Error al cargar archivo: {e}")
             return Arbol()
