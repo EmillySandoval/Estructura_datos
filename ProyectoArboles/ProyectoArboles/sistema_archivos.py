@@ -1,5 +1,6 @@
 import uuid
 from busqueda_trie import SistemaBusqueda
+from papelera_manager import PapeleraManager  # NUEVA IMPORTACION
 
 class Nodo:
     # Clase que representa un nodo en el sistema de archivos
@@ -60,11 +61,12 @@ class Arbol:
     # Clase principal que maneja el arbol de archivos y carpetas
     
     
+   
     def __init__(self):
         self.raiz = None
         self.nodos = {}
-        self.papelera = []
-        self.busqueda = SistemaBusqueda()  
+        self.papelera = PapeleraManager()  # CAMBIO: Ahora es PapeleraManager
+        self.busqueda = SistemaBusqueda() 
         
     def  crear_raiz(self, nombre="root"):
         id_nodo = str(uuid.uuid4())[:8]
@@ -178,32 +180,31 @@ class Arbol:
             "resultados": resultados_enriquecidos,
             "total_encontrados": len(resultados_enriquecidos)
         }
-    
-    def eliminar_nodo(self, ruta):
+        def eliminar_nodo(self, ruta):
         # Elimina un nodo moviendolo a la papelera
-        nodo = self.buscar_por_ruta(ruta)
+         nodo = self.buscar_por_ruta(ruta)
         if not nodo or nodo == self.raiz:
-            return False
+            return False, "No se puede eliminar la raiz o nodo no encontrado"
         
         # Remover de los hijos del padre
         nodo.padre.eliminar_hijo(nodo)
         
-        # Mover a la papelera
-        self.papelera.append({
-            "id": nodo.id,
-            "nombre": nodo.nombre,
-            "tipo": nodo.tipo,
-            "contenido": nodo.contenido,
-            "ruta_original": nodo.obtener_ruta()
-        })
+        # NUEVO: Agregar a la papelera usando PapeleraManager
+        self.papelera.agregar_item(
+            nodo.id,
+            nodo.nombre,
+            nodo.tipo,
+            nodo.contenido,
+            nodo.obtener_ruta()
+        )
         
+        # Eliminar del sistema de busqueda
         self.busqueda.eliminar_nodo(nodo.nombre, nodo.id)
         
         # Eliminar recursivamente del diccionario
         self._eliminar_recursivo(nodo)
         
-        return True
-    
+        return True, f"'{nodo.nombre}' movido a la papelera"
     def _eliminar_recursivo(self, nodo):
         if nodo.id in self.nodos:
             # NUEVO: Eliminar este nodo y sus hijos del sistema de busqueda
@@ -375,3 +376,35 @@ class Arbol:
             "busqueda_palabras": stats_busqueda["total_palabras_trie"],  # NUEVO
             "busqueda_entradas": stats_busqueda["total_entradas_hashmap"]  # NUEVO
         }
+        
+    def listar_papelera(self):
+        # Lista el contenido de la papelera
+        return self.papelera.listar_items()
+    
+    def restaurar_de_papelera(self, indice):
+        # Restaura un item desde la papelera
+        return self.papelera.restaurar_item(indice, self)
+    
+    def vaciar_papelera(self):
+        # Vacía toda la papelera
+        return self.papelera.vaciar_papelera()
+    
+    def eliminar_permanentemente(self, indice):
+        # Elimina permanentemente un item de la papelera
+        return self.papelera.eliminar_permanentemente(indice)
+    
+    def buscar_en_papelera(self, criterio, tipo_busqueda="nombre"):
+        # Busca en la papelera
+        if tipo_busqueda == "nombre":
+            return self.papelera.buscar_por_nombre(criterio)
+        elif tipo_busqueda == "ruta":
+            return self.papelera.buscar_por_ruta_original(criterio)
+        return []
+    
+    def estadisticas_papelera(self):
+        # Retorna estadisticas de la papelera
+        return self.papelera.estadisticas()
+    
+    def limpiar_papelera_automatico(self):
+        # Limpia automaticamente la papelera
+        return self.papelera.limpiar_automaticamente()

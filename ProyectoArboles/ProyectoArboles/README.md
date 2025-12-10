@@ -38,3 +38,47 @@ Simulador de linea de comandos que implementa un sistema de archivos jerarquico 
 # Clonar o descargar los archivos
 # Ejecutar el simulador
 python cmd_simulator.py
+## AVANCES DIA 7-9: INTERFAZ COMPLETA Y MANEJO DE ERRORES
+
+### Nuevas Caracteristicas Implementadas:
+
+#### 1. Sistema de Papelera Mejorado:
+- **Papelera de reciclaje** con capacidad configurable
+- **Restauracion** de archivos eliminados
+- **Busqueda** dentro de la papelera
+- **Eliminacion permanente** selectiva
+- **Limpieza automatica** de items antiguos
+- **Estadisticas** de uso de papelera
+
+#### 2. Nuevos Comandos:
+- `trash` - Listar contenido de papelera
+- `trash stats` - Estadisticas de papelera
+- `trash search <nombre>` - Buscar en papelera
+- `restore <numero>` - Restaurar desde papelera
+- `purge <numero>` - Eliminar permanentemente
+- `emptytrash` - Vaciar papelera completa
+- `whereis <nombre>` - Buscar en todo el sistema
+- `type <archivo>` - Mostrar contenido de archivo
+- `cat <archivo>` - Alias de type (Unix)
+- `copy <origen> <destino>` - Copiar archivos/carpetas
+- `cp <origen> <destino>` - Alias de copy
+- `info [ruta]` - Informacion detallada de nodo
+- `path` - Mostrar variable PATH
+- `echo <texto>` - Mostrar texto/variables
+
+#### 3. Mejoras de Interfaz:
+- **Autocompletado** de comandos con TAB
+- **Historial** navegable con flechas
+- **Mensajes de error** formateados y descriptivos
+- **Banner** de bienvenida mejorado
+- **Ayuda contextual** organizada por categorias
+- **Prompt** con ruta actual visualmente clara
+
+#### 4. Manejo Robusto de Errores:
+- **Validacion** de rutas y parametros
+- **Mensajes de error** especificos y utiles
+- **Manejo de excepciones** controlado
+- **Sugerencias** cuando fallan operaciones
+- **Modo debug** opcional con traceback
+
+### Comandos de Papelera - Ejemplos:

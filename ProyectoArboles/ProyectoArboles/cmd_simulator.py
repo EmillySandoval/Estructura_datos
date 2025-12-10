@@ -1,5 +1,7 @@
 import os
 import sys
+import readline  # Para autocompletado y historial
+import traceback  # Para manejo de errores detallado
 from pathlib import Path
 
 # Añadir el directorio actual al path
@@ -10,7 +12,7 @@ from persistencia import Persistencia
 
 class CMD_Simulator:
     # Simulador de linea de comandos tipo CMD/Unix
-    
+   
     def __init__(self):
         self.persistencia = Persistencia()
         self.arbol = self.persistencia.cargar()
@@ -23,6 +25,15 @@ class CMD_Simulator:
         self.ruta_actual = "/"
         self.historial = []
         self.ejecutando = True
+        self.comandos_autocompletar = [  # NUEVO: Lista para autocompletado
+            "mkdir", "touch", "ls", "dir", "cd", "pwd", "mv", "rm",
+            "rename", "search", "find", "export", "tree", "stats",
+            "clear", "cls", "history", "help", "?", "exit", "quit",
+            "trash", "restore", "emptytrash", "purge", "whereis",
+            "type", "cat", "copy", "cp", "info", "path", "echo"
+        ]
+        self.setup_autocompletado()  # NUEVO: Configurar autocompletado
+    
     
     def mostrar_prompt(self):
         # Muestra el prompt con la ruta actual
@@ -44,44 +55,52 @@ class CMD_Simulator:
         
         self.historial.append(comando)
         
-        if cmd == "exit" or cmd == "quit":
-            self.salir()
-        elif cmd == "help" or cmd == "?":
-            self.mostrar_ayuda()
-        elif cmd == "mkdir":
-            self.comando_mkdir(args)
-        elif cmd == "touch":
-            self.comando_touch(args)
-        elif cmd == "ls" or cmd == "dir":
-            self.comando_ls(args)
-        elif cmd == "pwd":
-            self.comando_pwd(args)
-        elif cmd == "cd":
-            self.comando_cd(args)
-        elif cmd == "mv":
-            self.comando_mv(args)
-        elif cmd == "rm":
-            self.comando_rm(args)
-        elif cmd == "rename":
-            self.comando_rename(args)
-        elif cmd == "export":
-            self.comando_export(args)
-        elif cmd == "stats":
-            self.comando_stats(args)
-        elif cmd == "clear" or cmd == "cls":
-            self.comando_clear()
-        elif cmd == "history":
-            self.comando_history()
-        elif cmd == "tree":
-            self.comando_tree(args)
-        elif cmd == "search":  # NUEVO: comando de busqueda
-            self.comando_search(args)
-        elif cmd == "find":    # NUEVO: alias para busqueda exacta
-            self.comando_find(args)
-        elif cmd == "test-trie":  # NUEVO: comando de prueba del Trie
-            self.comando_test_trie(args)
-        else:
-            print(f"Comando no reconocido: '{cmd}'. Escribe 'help' para ver comandos disponibles.")
+        try:
+            # Diccionario de comandos para mejor organizacion
+            comandos = {
+                "exit": self.salir,
+                "quit": self.salir,
+                "help": self.mostrar_ayuda,
+                "?": self.mostrar_ayuda,
+                "mkdir": lambda: self.comando_mkdir(args),
+                "touch": lambda: self.comando_touch(args),
+                "ls": lambda: self.comando_ls(args),
+                "dir": lambda: self.comando_ls(args),
+                "pwd": lambda: self.comando_pwd(args),
+                "cd": lambda: self.comando_cd(args),
+                "mv": lambda: self.comando_mv(args),
+                "rm": lambda: self.comando_rm(args),
+                "rename": lambda: self.comando_rename(args),
+                "export": lambda: self.comando_export(args),
+                "stats": lambda: self.comando_stats(args),
+                "clear": lambda: self.comando_clear(),
+                "cls": lambda: self.comando_clear(),
+                "history": lambda: self.comando_history(),
+                "tree": lambda: self.comando_tree(args),
+                "search": lambda: self.comando_search(args),
+                "find": lambda: self.comando_find(args),
+                "test-trie": lambda: self.comando_test_trie(args),
+                "trash": lambda: self.comando_trash(args),  # NUEVO
+                "restore": lambda: self.comando_restore(args),  # NUEVO
+                "emptytrash": lambda: self.comando_emptytrash(args),  # NUEVO
+                "purge": lambda: self.comando_purge(args),  # NUEVO
+                "whereis": lambda: self.comando_whereis(args),  # NUEVO
+                "type": lambda: self.comando_type(args),  # NUEVO
+                "cat": lambda: self.comando_cat(args),  # NUEVO
+                "copy": lambda: self.comando_copy(args),  # NUEVO
+                "cp": lambda: self.comando_copy(args),  # NUEVO
+                "info": lambda: self.comando_info(args),  # NUEVO
+                "path": lambda: self.comando_path(args),  # NUEVO
+                "echo": lambda: self.comando_echo(args),  # NUEVO
+            }
+            
+            if cmd in comandos:
+                comandos[cmd]()
+            else:
+                print(self.formatear_error(f"Comando no reconocido: '{cmd}'. Escribe 'help' para ver comandos disponibles."))
+                
+        except Exception as e:
+            self.manejar_excepcion(e, f"ejecutar comando '{cmd}'")
     
     def comando_mkdir(self, args):
         # Crea una nueva carpeta
@@ -419,6 +438,341 @@ class CMD_Simulator:
         
         print("\n=== FIN DE PRUEBA ===")
         
+    def comando_trash(self, args):
+        # Muestra el contenido de la papelera
+        if len(args) == 0:
+            # Listar toda la papelera
+            items = self.arbol.listar_papelera()
+            
+            if not items:
+                print("La papelera esta vacia.")
+                return
+            
+            print("\n   PAPELERA DE RECICLAJE")
+            print("   " + "-" * 70)
+            print("   #  Tipo       Nombre                         Ruta Original              Fecha")
+            print("   " + "-" * 70)
+            
+            for i, item in enumerate(items):
+                tipo = "DIR " if item.tipo == "carpeta" else "FILE"
+                nombre = item.nombre[:30] + "..." if len(item.nombre) > 30 else item.nombre.ljust(30)
+                ruta = item.ruta_original[:30] + "..." if len(item.ruta_original) > 30 else item.ruta_original.ljust(30)
+                fecha = item.fecha_eliminacion.strftime("%Y-%m-%d %H:%M")
+                
+                print(f"   {i:2}  {tipo}    {nombre}  {ruta}  {fecha}")
+            
+            print("   " + "-" * 70)
+            print(f"   Total: {len(items)} items")
+            
+        elif args[0] == "stats":
+            # Estadisticas de la papelera
+            stats = self.arbol.estadisticas_papelera()
+            
+            print("\n   ESTADISTICAS DE LA PAPELERA")
+            print("   " + "-" * 40)
+            print(f"   Items totales: {stats['total_items']}")
+            print(f"   Tamaño total: {stats['tamano_bytes']} bytes")
+            print(f"   Capacidad utilizada: {stats['capacidad_utilizada']}")
+            
+            if stats['tipos']:
+                print("\n   Distribucion por tipo:")
+                for tipo, cantidad in stats['tipos'].items():
+                    print(f"     {tipo}: {cantidad}")
+            
+            print("   " + "-" * 40)
+            
+        elif args[0] == "search" and len(args) > 1:
+            # Buscar en la papelera
+            criterio = args[1]
+            items = self.arbol.buscar_en_papelera(criterio, "nombre")
+            
+            if not items:
+                print(f"No se encontraron items con '{criterio}' en la papelera.")
+                return
+            
+            print(f"\n   Resultados de busqueda: '{criterio}'")
+            print("   " + "-" * 60)
+            
+            for i, item in enumerate(items):
+                tipo = "DIR " if item.tipo == "carpeta" else "FILE"
+                print(f"   {i:2}  {tipo}  {item.nombre} -> {item.ruta_original}")
+            
+            print("   " + "-" * 60)
+            
+        else:
+            print("Uso: trash                          (listar papelera)")
+            print("     trash stats                    (estadisticas)")
+            print("     trash search <nombre>          (buscar en papelera)")
+    
+    def comando_restore(self, args):
+        # Restaura un item desde la papelera
+        if len(args) < 1:
+            print("Uso: restore <numero>")
+            print("     restore 0  (restaura el primer item de la papelera)")
+            print("\nUsa 'trash' primero para ver los numeros de los items.")
+            return
+        
+        try:
+            indice = int(args[0])
+            resultado, mensaje = self.arbol.restaurar_de_papelera(indice)
+            
+            if resultado:
+                print(f"Item restaurado exitosamente: {resultado.nombre}")
+                self.persistencia.guardar_automatico(self.arbol)
+            else:
+                print(f"No se pudo restaurar: {mensaje}")
+                
+        except ValueError:
+            print("Error: El numero debe ser un valor entero.")
+        except Exception as e:
+            self.manejar_excepcion(e, "restaurar item")
+    
+    def comando_emptytrash(self, args):
+        # Vacía toda la papelera
+        if args and args[0] == "-confirm":
+            confirmacion = "s"
+        else:
+            confirmacion = input("¿Estas seguro de vaciar la papelera? (s/n): ").strip().lower()
+        
+        if confirmacion == 's':
+            cantidad = self.arbol.vaciar_papelera()
+            print(f"Papelera vaciada. {cantidad} items eliminados permanentemente.")
+            self.persistencia.guardar_automatico(self.arbol)
+        else:
+            print("Operacion cancelada.")
+    
+    def comando_purge(self, args):
+        # Elimina permanentemente un item especifico de la papelera
+        if len(args) < 1:
+            print("Uso: purge <numero>")
+            print("     purge 0  (elimina permanentemente el primer item)")
+            print("\nUsa 'trash' primero para ver los numeros de los items.")
+            return
+        
+        try:
+            indice = int(args[0])
+            confirmacion = input(f"¿Eliminar permanentemente el item {indice}? (s/n): ").strip().lower()
+            
+            if confirmacion == 's':
+                resultado, mensaje = self.arbol.eliminar_permanentemente(indice)
+                
+                if resultado:
+                    print(f"Item eliminado permanentemente: {mensaje}")
+                    self.persistencia.guardar_automatico(self.arbol)
+                else:
+                    print(f"No se pudo eliminar: {mensaje}")
+            else:
+                print("Operacion cancelada.")
+                
+        except ValueError:
+            print("Error: El numero debe ser un valor entero.")
+        except Exception as e:
+            self.manejar_excepcion(e, "eliminar permanentemente")
+    
+    def comando_whereis(self, args):
+        # Busca un archivo en todo el sistema
+        if len(args) < 1:
+            print("Uso: whereis <nombre>")
+            print("     whereis notas.txt  (busca en todo el sistema)")
+            return
+        
+        nombre = args[0]
+        
+        # Busqueda exacta primero
+        resultados_exactos = self.arbol.buscar_exacta(nombre)
+        
+        if resultados_exactos["resultados"]:
+            print(f"\nBusqueda exacta para: '{nombre}'")
+            print("-" * 60)
+            
+            for item in resultados_exactos["resultados"]:
+                tipo = "[DIR]" if item["tipo"] == "carpeta" else "[FILE]"
+                print(f"{tipo} {item['nombre']}")
+                print(f"    Ruta: {item['ruta']}")
+                if item["tipo"] == "archivo" and item["contenido"]:
+                    print(f"    Tamaño: {len(item['contenido'])} bytes")
+                print()
+        
+        # Busqueda por autocompletado
+        resultados_parciales = self.arbol.buscar_autocompletado(nombre, 20)
+        
+        if resultados_parciales["resultados"] and resultados_parciales["total_encontrados"] > len(resultados_exactos["resultados"]):
+            print(f"\nResultados parciales (que contienen '{nombre}'):")
+            print("-" * 60)
+            
+            for item in resultados_parciales["resultados"]:
+                # Evitar duplicados de busqueda exacta
+                if not any(r["ruta"] == item["ruta"] for r in resultados_exactos["resultados"]):
+                    tipo = "[DIR]" if item["tipo"] == "carpeta" else "[FILE]"
+                    print(f"{tipo} {item['nombre']} -> {item['ruta']}")
+            
+            if resultados_parciales["total_encontrados"] > len(resultados_parciales["resultados"]):
+                print(f"\n... y {resultados_parciales['total_encontrados'] - len(resultados_parciales['resultados'])} resultados mas.")
+        
+        if not resultados_exactos["resultados"] and not resultados_parciales["resultados"]:
+            print(f"No se encontro '{nombre}' en el sistema.")
+    
+    def comando_type(self, args):
+        # Muestra el contenido de un archivo
+        if len(args) < 1:
+            print("Uso: type <ruta_archivo>")
+            print("     type /documentos/notas.txt")
+            return
+        
+        ruta = args[0]
+        nodo = self.arbol.buscar_por_ruta(ruta)
+        
+        if not nodo:
+            print(f"Archivo no encontrado: {ruta}")
+            return
+        
+        if nodo.tipo != "archivo":
+            print(f"Error: '{ruta}' no es un archivo.")
+            return
+        
+        print(f"\nContenido de '{ruta}':")
+        print("-" * 60)
+        print(nodo.contenido if nodo.contenido else "(archivo vacio)")
+        print("-" * 60)
+        print(f"Tamaño: {len(nodo.contenido)} bytes")
+    
+    def comando_cat(self, args):
+        # Alias para type (comando Unix)
+        self.comando_type(args)
+    
+    def comando_copy(self, args):
+        # Copia un archivo o carpeta
+        if len(args) < 2:
+            print("Uso: copy <origen> <destino>")
+            print("     copy notas.txt documentos/")
+            print("     copy /original /backup/copia")
+            return
+        
+        origen = args[0]
+        destino = args[1]
+        
+        # Si origen es relativo, hacerlo absoluto
+        if not origen.startswith("/"):
+            if self.ruta_actual == "/":
+                origen = "/" + origen
+            else:
+                origen = self.ruta_actual + "/" + origen
+        
+        nodo_origen = self.arbol.buscar_por_ruta(origen)
+        if not nodo_origen:
+            print(f"Error: Origen no encontrado: {origen}")
+            return
+        
+        # Determinar nombre de copia
+        if destino.endswith("/"):
+            # Destino es carpeta, copiar con mismo nombre
+            ruta_destino = destino
+            nombre_copia = nodo_origen.nombre
+        else:
+            # Destino incluye nuevo nombre
+            if "/" in destino:
+                partes = destino.rsplit("/", 1)
+                ruta_destino = partes[0] if partes[0] else "/"
+                nombre_copia = partes[1]
+            else:
+                ruta_destino = self.ruta_actual
+                nombre_copia = destino
+        
+        # Verificar que no exista ya
+        destino_completo = f"{ruta_destino}/{nombre_copia}".replace("//", "/")
+        if self.arbol.buscar_por_ruta(destino_completo):
+            print(f"Error: Ya existe un item en: {destino_completo}")
+            return
+        
+        # Crear copia
+        nuevo_nodo = self.arbol.crear_nodo(
+            nombre_copia,
+            nodo_origen.tipo,
+            ruta_destino,
+            nodo_origen.contenido
+        )
+        
+        if nuevo_nodo:
+            # Si es carpeta, copiar recursivamente el contenido
+            if nodo_origen.tipo == "carpeta":
+                self._copiar_recursivo(nodo_origen, nuevo_nodo)
+            
+            print(f"Copiado: {origen} -> {destino_completo}")
+            self.persistencia.guardar_automatico(self.arbol)
+        else:
+            print(f"Error: No se pudo copiar {origen}")
+    
+    def _copiar_recursivo(self, origen, destino):
+        # Copia recursiva de carpetas
+        for hijo in origen.hijos:
+            nuevo_hijo = self.arbol.crear_nodo(
+                hijo.nombre,
+                hijo.tipo,
+                destino.obtener_ruta(),
+                hijo.contenido
+            )
+            
+            if nuevo_hijo and hijo.tipo == "carpeta":
+                self._copiar_recursivo(hijo, nuevo_hijo)
+    
+    def comando_info(self, args):
+        # Muestra informacion detallada de un nodo
+        if len(args) < 1:
+            ruta = self.ruta_actual
+        else:
+            ruta = args[0]
+        
+        nodo = self.arbol.buscar_por_ruta(ruta)
+        
+        if not nodo:
+            print(f"Error: Nodo no encontrado: {ruta}")
+            return
+        
+        print(f"\nINFORMACION DETALLADA")
+        print("-" * 50)
+        print(f"Nombre: {nodo.nombre}")
+        print(f"Tipo: {'CARPETA' if nodo.tipo == 'carpeta' else 'ARCHIVO'}")
+        print(f"Ruta completa: {nodo.obtener_ruta()}")
+        print(f"ID unico: {nodo.id}")
+        
+        if nodo.tipo == "archivo":
+            print(f"Tamaño: {len(nodo.contenido)} bytes")
+            print(f"Lineas: {len(nodo.contenido.splitlines())}")
+        
+        print(f"Hijos directos: {len(nodo.hijos)}")
+        print(f"Es raiz: {'Si' if nodo.es_raiz() else 'No'}")
+        print(f"Es hoja: {'Si' if nodo.es_hoja() else 'No'}")
+        
+        if nodo.padre:
+            print(f"Padre: {nodo.padre.nombre}")
+        
+        print("-" * 50)
+    
+    def comando_path(self, args):
+        # Muestra o cambia la variable PATH (simulada)
+        if len(args) == 0:
+            print("PATH actual: /;./")
+            print("(En este simulador, PATH siempre incluye / y directorio actual)")
+        else:
+            print("Nota: En este simulador, PATH no es configurable.")
+    
+    def comando_echo(self, args):
+        # Muestra texto o variables
+        if len(args) == 0:
+            return
+        
+        texto = " ".join(args)
+        
+        # Variables especiales
+        if texto == "$PATH":
+            print("/;./")
+        elif texto == "$PWD":
+            print(self.ruta_actual)
+        elif texto.startswith("$"):
+            print("(Variable no definida)")
+        else:
+            print(texto)
+        
         def mostrar_arbol_rec(nodo, nivel=0, prefijo=""):
             if nivel == 0:
                 print(f"{nodo.nombre}/")
@@ -440,41 +794,70 @@ class CMD_Simulator:
             print("Error: No hay carpeta raiz en el arbol")
     
     def mostrar_ayuda(self):
-        print("\n=== COMANDOS DISPONIBLES ===")
-        print("Sistema de archivos jerarquico - Simulador CMD")
-        print("=" * 50)
+        # Muestra la ayuda con todos los comandos disponibles
+        print("\n" + "=" * 70)
+        print("SISTEMA DE ARCHIVOS JERARQUICO - SIMULADOR CMD")
+        print("=" * 70)
+        print("COMANDOS DISPONIBLES (Dia 7-9)")
+        print("-" * 70)
         
-        comandos = [
-            ("mkdir <nombre>", "Crear nueva carpeta"),
-            ("touch <nombre> [contenido]", "Crear nuevo archivo"),
-            ("ls [ruta]", "Listar contenido de directorio"),
-            ("dir [ruta]", "Alias de ls"),
-            ("cd <ruta>", "Cambiar directorio actual"),
-            ("pwd [ruta]", "Mostrar ruta completa"),
-            ("mv <origen> <destino>", "Mover archivo/carpeta"),
-            ("rm <ruta>", "Eliminar archivo/carpeta (papelera)"),
-            ("rename <ruta> <nuevo_nombre>", "Renombrar archivo/carpeta"),
-            ("search <prefijo> [max]", "Buscar con autocompletado"),  # NUEVO
-            ("find <nombre_exacto>", "Busqueda exacta"),  # NUEVO
-            ("export preorden [archivo]", "Exportar recorrido preorden"),
-            ("tree [ruta]", "Mostrar arbol de directorios"),
-            ("stats", "Mostrar estadisticas del sistema"),
-            ("test-trie", "Probar sistema de busqueda"),  # NUEVO
-            ("clear / cls", "Limpiar pantalla"),
-            ("history", "Mostrar historial de comandos"),
-            ("help / ?", "Mostrar esta ayuda"),
-            ("exit / quit", "Salir del programa")
-        ]
+        categorias = {
+            "Sistema de archivos": [
+                ("mkdir <nombre>", "Crear nueva carpeta"),
+                ("touch <nombre> [contenido]", "Crear archivo"),
+                ("ls [ruta]", "Listar contenido"),
+                ("cd <ruta>", "Cambiar directorio"),
+                ("pwd", "Mostrar ruta actual"),
+                ("cp <origen> <destino>", "Copiar archivo/carpeta"),
+                ("mv <origen> <destino>", "Mover/renombrar"),
+                ("rm <ruta>", "Eliminar (a papelera)"),
+                ("rename <viejo> <nuevo>", "Renombrar"),
+            ],
+            "Busqueda y contenido": [
+                ("search <prefijo>", "Buscar con autocompletado"),
+                ("find <nombre>", "Busqueda exacta"),
+                ("whereis <nombre>", "Buscar en todo el sistema"),
+                ("type <archivo>", "Mostrar contenido"),
+                ("cat <archivo>", "Alias de type"),
+            ],
+            "Papelera de reciclaje": [
+                ("trash", "Mostrar contenido de papelera"),
+                ("trash stats", "Estadisticas de papelera"),
+                ("trash search <nombre>", "Buscar en papelera"),
+                ("restore <numero>", "Restaurar de papelera"),
+                ("purge <numero>", "Eliminar permanentemente"),
+                ("emptytrash", "Vaciar papelera"),
+            ],
+            "Informacion y utilidades": [
+                ("tree [ruta]", "Mostrar arbol de directorios"),
+                ("info [ruta]", "Informacion detallada"),
+                ("stats", "Estadisticas del sistema"),
+                ("export preorden [archivo]", "Exportar recorrido"),
+                ("path", "Mostrar variable PATH"),
+                ("echo <texto>", "Mostrar texto/variables"),
+            ],
+            "Sistema y ayuda": [
+                ("clear / cls", "Limpiar pantalla"),
+                ("history", "Mostrar historial"),
+                ("help / ?", "Mostrar esta ayuda"),
+                ("test-trie", "Probar sistema de busqueda"),
+                ("exit / quit", "Salir del programa"),
+            ]
+        }
         
-        for comando, descripcion in comandos:
-            print(f"{comando:30} - {descripcion}")
+        for categoria, comandos in categorias.items():
+            print(f"\n{categoria}:")
+            print("-" * 40)
+            for comando, descripcion in comandos:
+                print(f"  {comando:25} - {descripcion}")
         
-        print("\n=== NUEVOS COMANDOS DIA 5-6 ===")  # NUEVA SECCION
-        print("search <prefijo>    - Busqueda con autocompletado (Trie)")
-        print("find <nombre>       - Busqueda exacta (HashMap)")
-        print("test-trie           - Probar sistema de busqueda")
-        print("=" * 50)
-        
+        print("\n" + "=" * 70)
+        print("TIPS:")
+        print("  - Usa TAB para autocompletar comandos")
+        print("  - Usa flechas arriba/abajo para navegar historial")
+        print("  - Los archivos eliminados van a la papelera")
+        print("  - Usa 'emptytrash -confirm' para evitar confirmacion")
+        print("=" * 70)
     def salir(self):
         # Guarda y sale del programa
         print("Guardando datos...")
@@ -483,31 +866,35 @@ class CMD_Simulator:
         self.ejecutando = False
     
     def iniciar(self):
-           
-        print("========================================")
-        print("   SIMULADOR CMD - SISTEMA DE ARCHIVOS")
-        print("========================================")
-        print("DIA 5-6: Trie y Busqueda implementados")  # NUEVO
-        print("========================================")
-        print("Nuevos comandos: search, find, test-trie")  # NUEVO
-        print("========================================")
-        print("Escribe 'help' para ver comandos disponibles")
-        print("Escribe 'exit' para salir")
-        print("========================================\n")
+        # Inicia el simulador de linea de comandos
+        self.mostrar_banner()
         
-       
+        # Limpieza automatica de papelera
+        eliminados = self.arbol.limpiar_papelera_automatico()
+        if eliminados > 0:
+            print(self.formatear_error(f"Se limpiaron {eliminados} items antiguos de la papelera automaticamente.", "INFO"))
+        
+        print(self.formatear_error("Escribe 'help' para ver comandos disponibles", "INFO"))
+        print(self.formatear_error("Escribe 'exit' para salir", "INFO"))
+        print("")
+        
         while self.ejecutando:
             try:
-                entrada = input(self.mostrar_prompt())
-                self.ejecutar_comando(entrada)
+                # Mostrar prompt con ruta actual
+                prompt = self.mostrar_prompt()
+                entrada = input(prompt)
+                
+                if entrada.strip():
+                    self.ejecutar_comando(entrada)
+                    
             except KeyboardInterrupt:
-                print("\n\nInterrumpido por usuario. Use 'exit' para salir correctamente.")
+                print("\n" + self.formatear_error("Interrumpido por usuario.", "ADVERTENCIA"))
+                print(self.formatear_error("Use 'exit' para salir correctamente.", "INFO"))
             except EOFError:
                 print("\n")
                 self.salir()
             except Exception as e:
-                print(f"Error inesperado: {e}")
-
+                self.manejar_excepcion(e, "bucle principal")
 def main():
     # Funcion principal
     simulador = CMD_Simulator()

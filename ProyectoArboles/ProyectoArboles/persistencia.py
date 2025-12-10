@@ -16,30 +16,34 @@ class Persistencia:
     
     def guardar_automatico(self, arbol):
         try:
-            # Preparar estructura por defecto
+            # Construir un diccionario serializable y consistente
             datos = {}
 
-            # Guardar raiz si existe
-            if getattr(arbol, 'raiz', None):
-                datos['raiz'] = arbol.raiz.to_dict()
+            # Raiz
+            raiz = getattr(arbol, 'raiz', None)
+            datos['raiz'] = raiz.to_dict() if raiz is not None else None
 
-            # Guardar papelera (si no existe, usar estructura vacía compatible)
-            datos['papelera'] = getattr(arbol, 'papelera', {})
+            # Papelera (usar to_dict si existe)
+            papelera = getattr(arbol, 'papelera', None)
+            if papelera is not None and hasattr(papelera, 'to_dict'):
+                try:
+                    datos['papelera'] = papelera.to_dict()
+                except Exception:
+                    datos['papelera'] = None
+            else:
+                datos['papelera'] = None
 
-            # Guardar sistema de búsqueda si está disponible
+            # Sistema de búsqueda
             busqueda = getattr(arbol, 'busqueda', None)
-            if busqueda is not None:
-                # Intentar serializar con to_dict si existe
-                if hasattr(busqueda, 'to_dict'):
-                    try:
-                        datos['busqueda'] = busqueda.to_dict()
-                    except Exception:
-                        # Si falla la serialización, guardar None para evitar excepción
-                        datos['busqueda'] = None
-                else:
+            if busqueda is not None and hasattr(busqueda, 'to_dict'):
+                try:
+                    datos['busqueda'] = busqueda.to_dict()
+                except Exception:
                     datos['busqueda'] = None
+            else:
+                datos['busqueda'] = None
 
-            # Guarda el arbol automaticamente en JSON
+            # Guardar en JSON
             with open(self.archivo, 'w', encoding='utf-8') as f:
                 json.dump(datos, f, indent=2, ensure_ascii=False)
 
@@ -49,7 +53,6 @@ class Persistencia:
             return False
     
     def cargar(self):
-        # Carga el arbol desde archivo JSON
         try:
             if not os.path.exists(self.archivo):
                 return Arbol()
@@ -60,20 +63,26 @@ class Persistencia:
             arbol = Arbol()
             
             # Cargar raiz
-            if "raiz" in datos:
+            if "raiz" in datos and datos["raiz"] is not None:
                 arbol.raiz = Nodo.from_dict(datos["raiz"])
                 self._reconstruir_diccionario(arbol, arbol.raiz)
             
-            # Cargar papelera
+            # CAMBIO: Cargar papelera usando PapeleraManager
             if "papelera" in datos:
-                arbol.papelera = datos["papelera"]
+                # Si el valor es None, mantener la instancia por defecto
+                if datos["papelera"] is None:
+                    arbol.papelera = getattr(arbol, 'papelera', None) or arbol.papelera
+                else:
+                    from papelera_manager import PapeleraManager
+                    arbol.papelera = PapeleraManager.from_dict(datos["papelera"])
             
-            # NUEVO: Cargar sistema de busqueda
-            if "busqueda" in datos:
+            # Cargar sistema de busqueda
+            if "busqueda" in datos and datos["busqueda"] is not None:
                 from busqueda_trie import SistemaBusqueda
                 arbol.busqueda = SistemaBusqueda.from_dict(datos["busqueda"])
             
             return arbol
+        # ... resto del codigo igual ... 
        
            
         except Exception as e:

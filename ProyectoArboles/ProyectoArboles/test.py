@@ -319,3 +319,110 @@ class TestPersistenciaConBusqueda(unittest.TestCase):
 if __name__ == "__main__":
     
     unittest.main()
+    class TestPapeleraManager(unittest.TestCase):
+     def setUp(self):
+        self.papelera = TestPapeleraManager(capacidad_maxima=10)
+    
+    def test_agregar_item(self):
+        resultado = self.papelera.agregar_item("id1", "archivo.txt", "archivo", "contenido", "/archivo.txt")
+        self.assertTrue(resultado)
+        self.assertEqual(len(self.papelera.items), 1)
+    
+    def test_capacidad_maxima(self):
+        for i in range(15):
+            self.papelera.agregar_item(f"id{i}", f"archivo{i}.txt", "archivo", "contenido", f"/archivo{i}.txt")
+        
+        self.assertEqual(len(self.papelera.items), 10)
+    
+    def test_buscar_por_nombre(self):
+        self.papelera.agregar_item("id1", "notas.txt", "archivo", "contenido", "/notas.txt")
+        self.papelera.agregar_item("id2", "documento.pdf", "archivo", "contenido", "/documento.pdf")
+        
+        resultados = self.papelera.buscar_por_nombre("nota")
+        self.assertEqual(len(resultados), 1)
+        self.assertEqual(resultados[0].nombre, "notas.txt")
+    
+    def test_restaurar_item(self):
+        # Necesitamos un arbol para probar restauracion
+        arbol = Arbol()
+        arbol.crear_raiz()
+        
+        self.papelera.agregar_item("id1", "archivo.txt", "archivo", "contenido", "/archivo.txt")
+        
+        nodo_restaurado, mensaje = self.papelera.restaurar_item(0, arbol)
+        self.assertIsNotNone(nodo_restaurado)
+        self.assertEqual(nodo_restaurado.nombre, "archivo.txt")
+        self.assertEqual(len(self.papelera.items), 0)
+    
+    def test_eliminar_permanentemente(self):
+        self.papelera.agregar_item("id1", "archivo.txt", "archivo", "contenido", "/archivo.txt")
+        
+        resultado, mensaje = self.papelera.eliminar_permanentemente(0)
+        self.assertTrue(resultado)
+        self.assertEqual(len(self.papelera.items), 0)
+    
+    def test_vaciar_papelera(self):
+        for i in range(5):
+            self.papelera.agregar_item(f"id{i}", f"archivo{i}.txt", "archivo", "contenido", f"/archivo{i}.txt")
+        
+        cantidad = self.papelera.vaciar_papelera()
+        self.assertEqual(cantidad, 5)
+        self.assertEqual(len(self.papelera.items), 0)
+
+class TestManejoErrores(unittest.TestCase):
+    def setUp(self):
+        self.arbol = Arbol()
+        self.arbol.crear_raiz()
+    
+    def test_eliminar_raiz(self):
+        resultado, mensaje = self.arbol.eliminar_nodo("/")
+        self.assertFalse(resultado)
+        self.assertIn("No se puede eliminar la raiz", mensaje)
+    
+    def test_crear_nodo_ruta_invalida(self):
+        resultado = self.arbol.crear_nodo("archivo.txt", "archivo", "/ruta/inexistente")
+        self.assertIsNone(resultado)
+    
+    def test_mover_a_si_mismo(self):
+        self.arbol.crear_nodo("carpeta1", "carpeta", "/")
+        resultado = self.arbol.mover_nodo("/carpeta1", "/carpeta1")
+        self.assertFalse(resultado)
+    
+    def test_renombrar_nombre_existente(self):
+        self.arbol.crear_nodo("archivo1.txt", "archivo", "/")
+        self.arbol.crear_nodo("archivo2.txt", "archivo", "/")
+        
+        resultado = self.arbol.renombrar_nodo("/archivo1.txt", "archivo2.txt")
+        self.assertFalse(resultado)
+
+class TestComandosNuevos(unittest.TestCase):
+    def setUp(self):
+        self.arbol = Arbol()
+        self.arbol.crear_raiz()
+    
+    def test_papelera_integrada(self):
+        # Crear y eliminar archivo
+        self.arbol.crear_nodo("test.txt", "archivo", "/", "contenido")
+        resultado, mensaje = self.arbol.eliminar_nodo("/test.txt")
+        
+        self.assertTrue(resultado)
+        self.assertEqual(len(self.arbol.listar_papelera()), 1)
+        
+        # Restaurar
+        nodo_restaurado, mensaje = self.arbol.restaurar_de_papelera(0)
+        self.assertIsNotNone(nodo_restaurado)
+        self.assertEqual(nodo_restaurado.nombre, "test.txt")
+        self.assertEqual(len(self.arbol.listar_papelera()), 0)
+    
+    def test_busqueda_avanzada(self):
+        self.arbol.crear_nodo("documentos", "carpeta", "/")
+        self.arbol.crear_nodo("notas.txt", "archivo", "/documentos", "contenido1")
+        self.arbol.crear_nodo("notas_viejas.txt", "archivo", "/documentos", "contenido2")
+        
+        # Busqueda parcial
+        resultados = self.arbol.buscar_autocompletado("not", 10)
+        self.assertEqual(len(resultados["resultados"]), 2)
+        
+        # Busqueda exacta
+        resultados_exactos = self.arbol.buscar_exacta("notas.txt")
+        self.assertEqual(len(resultados_exactos["resultados"]), 1)
