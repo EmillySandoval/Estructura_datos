@@ -82,3 +82,39 @@ python cmd_simulator.py
 - **Modo debug** opcional con traceback
 
 ### Comandos de Papelera - Ejemplos:
+## AVANCES DIA 10-11: PRUEBAS DE INTEGRACION Y PERFORMANCE
+
+### Nuevas Caracteristicas Implementadas:
+
+#### 1. Sistema Completo de Pruebas:
+- **Pruebas de integracion** completa del sistema
+- **Casos limite** y condiciones de borde
+- **Pruebas de stress** con miles de operaciones
+- **Pruebas de consistencia** entre arbol y busqueda
+- **Pruebas de recuperacion** de errores
+
+#### 2. Sistema de Benchmark:
+- **benchmark.py** - Pruebas de rendimiento automatizadas
+- **Medicion de tiempos** de operaciones
+- **Uso de memoria** y eficiencia
+- **Pruebas escalables** (100 a 10,000 nodos)
+- **Resultados detallados** en archivo de texto
+
+#### 3. Scripts de Prueba Automatizados:
+- **run_tests.py** - Script principal para ejecutar todas las pruebas
+- **test_integracion.py** - Pruebas de integracion completas
+- **Comando benchmark** integrado en el CMD
+
+#### 4. Mejoras de Performance:
+- **Optimizacion de busqueda** en arboles grandes
+- **Manejo eficiente de memoria**
+- **Validacion de limites** de rendimiento
+- **Tolerancia a fallos** y recuperacion
+
+### Archivos Nuevos Día 10-11:
+
+1. **benchmark.py** - Sistema de pruebas de rendimiento
+2. **test_integracion.py** - Pruebas de integracion completa
+3. **run_tests.py** - Script para ejecutar todas las pruebas
+
+### Comandos Nuevos:

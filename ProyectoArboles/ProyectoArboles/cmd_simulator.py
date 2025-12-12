@@ -30,7 +30,7 @@ class CMD_Simulator:
             "rename", "search", "find", "export", "tree", "stats",
             "clear", "cls", "history", "help", "?", "exit", "quit",
             "trash", "restore", "emptytrash", "purge", "whereis",
-            "type", "cat", "copy", "cp", "info", "path", "echo"
+            "type", "cat", "copy", "cp", "info", "path", "echo","benchmark"
         ]
         self.setup_autocompletado()  # NUEVO: Configurar autocompletado
     
@@ -92,6 +92,7 @@ class CMD_Simulator:
                 "info": lambda: self.comando_info(args),  # NUEVO
                 "path": lambda: self.comando_path(args),  # NUEVO
                 "echo": lambda: self.comando_echo(args),  # NUEVO
+                 "benchmark": lambda: self.comando_benchmark(args),  # NUEVO
             }
             
             if cmd in comandos:
@@ -803,6 +804,7 @@ class CMD_Simulator:
         
         categorias = {
             "Sistema de archivos": [
+                 ("benchmark", "Pruebas de rendimiento"),  
                 ("mkdir <nombre>", "Crear nueva carpeta"),
                 ("touch <nombre> [contenido]", "Crear archivo"),
                 ("ls [ruta]", "Listar contenido"),
@@ -902,3 +904,26 @@ def main():
 
 if __name__ == "__main__":
     main()
+    def comando_benchmark(self, args):
+        # Ejecuta pruebas de rendimiento
+        print("\n[INFO] Iniciando pruebas de rendimiento...")
+        print("[INFO] Esto puede tomar varios segundos/minutos")
+        print("[INFO] Presiona Ctrl+C para cancelar")
+        
+        try:
+            # Importar y ejecutar benchmark
+            from benchmark import ejecutar_benchmark
+            
+            # Ejecutar benchmark
+            ejecutar_benchmark()
+            
+            print("\n[COMPLETADO] Benchmark finalizado")
+            print("[INFO] Los resultados se guardaron en 'benchmark_resultados.txt'")
+            
+        except ImportError:
+            print("[ERROR] No se encontro benchmark.py")
+            print("[INFO] Asegurate de que el archivo benchmark.py este en la carpeta")
+        except KeyboardInterrupt:
+            print("\n[INFO] Benchmark cancelado por el usuario")
+        except Exception as e:
+            print(f"[ERROR] Error ejecutando benchmark: {e}")

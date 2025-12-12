@@ -2,6 +2,8 @@ import unittest
 import os
 import sys
 from pathlib import Path
+import tempfile
+import shutil
 
 # Añadir el directorio actual al path
 sys.path.insert(0, str(Path(__file__).parent))
