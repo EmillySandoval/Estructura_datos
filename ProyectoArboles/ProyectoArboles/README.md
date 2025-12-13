@@ -1,120 +1,516 @@
 # PROYECTO 1: SIMULADOR DE CMD CON ARBOLES
 
 ## Descripcion
-Simulador de linea de comandos que implementa un sistema de archivos jerarquico basado en arboles. El sistema permite crear, mover, renombrar y eliminar archivos y carpetas, con persistencia automatica en archivo JSON.
+Simulador completo de linea de comandos que implementa un sistema de archivos jerarquico basado en arboles generales. Desarrollado para la materia de Estructuras de Datos.
 
-## Caracteristicas Implementadas (Dia 1-4)
+## Caracteristicas Principales
 
-### Estructuras de datos:
-- Arbol general con nodos (carpetas/archivos)
-- Persistencia automatica en archivo JSON
-- Papelera temporal para eliminaciones
+### Sistema de Archivos Jerarquico
+- Arbol general con nodos para carpetas y archivos
+- Persistencia en formato JSON
+- Operaciones CRUD completas
+- Recorridos en preorden para exportacion
 
-### Comandos implementados:
-1. **mkdir** - Crear nueva carpeta
-2. **touch** - Crear nuevo archivo
-3. **ls / dir** - Listar contenido de directorio
-4. **cd** - Cambiar directorio actual
-5. **pwd** - Mostrar ruta completa
-6. **mv** - Mover archivo/carpeta
-7. **rm** - Eliminar archivo/carpeta
-8. **rename** - Renombrar archivo/carpeta
-9. **export preorden** - Exportar recorrido en preorden
-10. **tree** - Mostrar arbol de directorios
-11. **stats** - Mostrar estadisticas del sistema
-12. **clear / cls** - Limpiar pantalla
-13. **history** - Mostrar historial de comandos
-14. **help / ?** - Mostrar ayuda
-15. **exit / quit** - Salir del programa
+### Sistema Avanzado de Busqueda
+- Trie para autocompletado de nombres por prefijo
+- HashMap para busqueda exacta case-insensitive
+- Indexacion de todos los nodos creados
+- Sincronizacion con operaciones del arbol
 
-## Instalacion y Ejecucion
+### Papelera de Reciclaje Avanzada
+- Capacidad configurable (default: 100 items)
+- Retencion temporal (30 dias)
+- Restauracion inteligente con deteccion de conflictos
+- Limpieza automatica de items antiguos
+- Busqueda dentro de la papelera
 
-### Requisitos:
+### Interfaz de Consola Profesional
+- Comandos tipo Windows
+- Autocompletado con TAB
+- Historial navegable
+- Manejo robusto de errores
+- Validacion de rutas y parametros
+
+## Estructura del Proyecto
+proyecto_arboles/
+    
+    cmd_simulator.py        # Interfaz principal de linea de comandos
+    sistema_archivos.py     # Implementacion del arbol general
+    persistencia.py         # Guardado y carga en JSON
+    busqueda_trie.py        # Trie y HashMap para busqueda
+    papelera_manager.py     # Gestion de papelera de reciclaje
+
+    tests.py                # Pruebas unitarias completas
+    test_integracion.py     # Pruebas de integracion
+    benchmark.py            # Pruebas de rendimiento
+    run_tests.py            # Script para ejecutar pruebas
+
+    datos.json              # Archivo de persistencia
+    README.md               # Esta documentacion
+
+
+## Instalacion y Requisitos
+
+### Requisitos del Sistema
 - Python 3.6 o superior
-- No se requieren librerias externas
+- Sistema operativo: Windows, Linux o macOS
+- Sin dependencias externas obligatorias
 
-### Ejecucion:
-```bash
-# Clonar o descargar los archivos
-# Ejecutar el simulador
+### Instalacion
+bash
+# 1. Clonar o descargar el proyecto
+git clone <repositorio>
+cd proyecto_arboles
+
+# 2. (Opcional) Instalar dependencias para funcionalidades extra
+pip install pyreadline3    # Autocompletado mejorado en Windows
+pip install psutil         # Para pruebas de memoria
+
+
+# Ejecuion
+## Modo iterativo
+bash
 python cmd_simulator.py
-## AVANCES DIA 7-9: INTERFAZ COMPLETA Y MANEJO DE ERRORES
 
-### Nuevas Caracteristicas Implementadas:
+## Ejecutar todas las Pruebas
+bash
+python run_tests.py --todo
 
-#### 1. Sistema de Papelera Mejorado:
-- **Papelera de reciclaje** con capacidad configurable
-- **Restauracion** de archivos eliminados
-- **Busqueda** dentro de la papelera
-- **Eliminacion permanente** selectiva
-- **Limpieza automatica** de items antiguos
-- **Estadisticas** de uso de papelera
+## Ejecutar Benchmark de Rendimiento
+bash
+python cmd_simulator.py
+C:\> benchmark
 
-#### 2. Nuevos Comandos:
-- `trash` - Listar contenido de papelera
-- `trash stats` - Estadisticas de papelera
-- `trash search <nombre>` - Buscar en papelera
-- `restore <numero>` - Restaurar desde papelera
-- `purge <numero>` - Eliminar permanentemente
-- `emptytrash` - Vaciar papelera completa
-- `whereis <nombre>` - Buscar en todo el sistema
-- `type <archivo>` - Mostrar contenido de archivo
-- `cat <archivo>` - Alias de type (Unix)
-- `copy <origen> <destino>` - Copiar archivos/carpetas
-- `cp <origen> <destino>` - Alias de copy
-- `info [ruta]` - Informacion detallada de nodo
-- `path` - Mostrar variable PATH
-- `echo <texto>` - Mostrar texto/variables
 
-#### 3. Mejoras de Interfaz:
-- **Autocompletado** de comandos con TAB
-- **Historial** navegable con flechas
-- **Mensajes de error** formateados y descriptivos
-- **Banner** de bienvenida mejorado
-- **Ayuda contextual** organizada por categorias
-- **Prompt** con ruta actual visualmente clara
+## Comandos disponibles
+### Sistema de archivos
+bash
+Comando                     Descripcion                 Ejemplo
+-------------------------------------------------------------------------------
+mkdir <nombre>	            Crear nueva carpeta	        mkdir documentos
+touch <nombre> [contenido]	Crear archivo	            touch notas.txt "Hola mundo"
+ls [ruta]	                Listar contenido	        ls /documentos
+cd <ruta>	                Cambiar directorio	        cd documentos
+pwd	                        Mostrar ruta actual	        pwd
+cp <origen> <destino>	    Copiar archivo/carpeta	    cp archivo.txt backup/
+mv <origen> <destino>	    Mover o renombrar	        mv viejo.txt nuevo.txt
+rm <ruta>	                Eliminar (a papelera)	    rm archivo.txt
+rename <viejo> <nuevo>	    Renombrar	                rename viejo.txt nuevo.txt
 
-#### 4. Manejo Robusto de Errores:
-- **Validacion** de rutas y parametros
-- **Mensajes de error** especificos y utiles
-- **Manejo de excepciones** controlado
-- **Sugerencias** cuando fallan operaciones
-- **Modo debug** opcional con traceback
+### Busqueda y Contenido
+bash
+Comando	                    Descripcion	                Ejemplo
+-------------------------------------------------------------------------------
+search <prefijo>	        Buscar por autocompletado	search doc
+find <nombre>	            Busqueda exacta	find        notas.txt
+whereis <nombre>	        Buscar en todo el sistema	whereis config.ini
+type <archivo>	            Mostrar contenido	        type /documentos/notas.txt
+cat <archivo>	            Alias de type	            cat archivo.txt
 
-### Comandos de Papelera - Ejemplos:
-## AVANCES DIA 10-11: PRUEBAS DE INTEGRACION Y PERFORMANCE
+### Papelera de Reciclaje
+bash
+Comando	                    Descripcion	                Ejemplo
+-------------------------------------------------------------------------------
+trash	                    Listar cont. de papelera    trash
+trash stats	                Estadisticas de papelera	trash stats
+trash search <nombre>	    Buscar en papelera	trash   search documento
+restore <numero>	        Restaurar desde papelera	restore 0
+purge <numero>	            Eliminar permanentemente	purge 0
+emptytrash	                Vaciar papelera	            emptytrash
 
-### Nuevas Caracteristicas Implementadas:
+### Informacion y Utilidades
+bash
+Comando	                    Descripcion	                Ejemplo
+-------------------------------------------------------------------------------
+tree [ruta]	                Mostrar arbol directorios   tree /
+info [ruta]	                Informacion detallada	    info /documentos
+stats	                    Estadisticas del sistema	stats
+export preorden [archivo]	Exportar recorrido	        export preorden recorrido.txt
+history	                    Mostrar historial	        history
+help o ?	                Mostrar ayuda	            help
 
-#### 1. Sistema Completo de Pruebas:
-- **Pruebas de integracion** completa del sistema
-- **Casos limite** y condiciones de borde
-- **Pruebas de stress** con miles de operaciones
-- **Pruebas de consistencia** entre arbol y busqueda
-- **Pruebas de recuperacion** de errores
 
-#### 2. Sistema de Benchmark:
-- **benchmark.py** - Pruebas de rendimiento automatizadas
-- **Medicion de tiempos** de operaciones
-- **Uso de memoria** y eficiencia
-- **Pruebas escalables** (100 a 10,000 nodos)
-- **Resultados detallados** en archivo de texto
+## Ejemplos 1 de uso
+bash
+#Crear estructura de archivos
+C:\> mkdir documentos
+C:\> cd documentos
+C:\documentos> mkdir personal
+C:\documentos> mkdir trabajo
+C:\documentos> touch notas.txt "Notas importantes"
+C:\documentos> cp notas.txt backup.txt
+C:\documentos> ls
+[DIR]   personal
+[DIR]   trabajo
+[FILE]  notas.txt      (18 bytes)
+[FILE]  backup.txt     (18 bytes)
 
-#### 3. Scripts de Prueba Automatizados:
-- **run_tests.py** - Script principal para ejecutar todas las pruebas
-- **test_integracion.py** - Pruebas de integracion completas
-- **Comando benchmark** integrado en el CMD
+## Ejemplo 2 Busqueda avanzada
+bash
+C:\> search doc
+Encontrados: 3
+Mostrando: 3
 
-#### 4. Mejoras de Performance:
-- **Optimizacion de busqueda** en arboles grandes
-- **Manejo eficiente de memoria**
-- **Validacion de limites** de rendimiento
-- **Tolerancia a fallos** y recuperacion
+1. [DIR] documentos -> /documentos
+2. [FILE] documento1.txt -> /documento1.txt
+3. [FILE] doc_especial.pdf -> /documentos/doc_especial.pdf
 
-### Archivos Nuevos Día 10-11:
+C:\> find notas.txt
+Encontrados: 1
 
-1. **benchmark.py** - Sistema de pruebas de rendimiento
-2. **test_integracion.py** - Pruebas de integracion completa
-3. **run_tests.py** - Script para ejecutar todas las pruebas
+1. [FILE] notas.txt -> /documentos/notas.txt
+    Contenido: Notas importantes
 
-### Comandos Nuevos:
+## Ejemplo 3: Manejo de Papelera
+bash
+C:\> rm /documentos/notas.txt
+C:\> trash
+
+C:\> restore 0
+Item restaurado exitosamente: notas.txt
+
+## Ejecutar suite completa de pruebas
+### Todas las pruebas
+bash
+python run_tests.py --todo
+
+### Solo pruebas unitarias
+bash
+python run_tests.py --unitarias
+
+### Solo pruebas de integracion
+bash
+python run_tests.py --integracion
+
+### Solo benchmark
+bash
+python run_tests.py --benchmark
+
+
+## Componentes Principales
+- *Arbol (sistema_archivos.py)*
+    Gestiona la jerarquia de nodos
+    Implementa operaciones CRUD
+    Mantiene diccionario para busqueda rapida por ID
+- *SistemaBusqueda (busqueda_trie.py)*
+    Trie para autocompletado por prefijo
+    HashMap para busqueda exacta
+    Sincronizacion automatica con el arbol
+- *PapeleraManager (papelera_manager.py)*
+    Gestion de items eliminados
+    Restauracion con verificacion
+    Limpieza automatica por antiguedad
+- *Persistencia (persistencia.py)*
+    Serializacion/deserializacion JSON
+    Exportacion de recorridos
+    Recuperacion de errores
+
+
+# Documentacion Tecnica del Proyecto
+## 1. Sistema de Archivos (sistema_archivos.py)
+### Clase nodo
+bash
+class Nodo:
+    """
+    Representa un elemento en el sistema de archivos.
+    
+    Atributos:
+        id (str): Identificador unico del nodo
+        nombre (str): Nombre del archivo/carpeta
+        tipo (str): 'carpeta' o 'archivo'
+        contenido (str): Contenido del archivo (vacio para carpetas)
+        hijos (List[Nodo]): Lista de nodos hijos
+        padre (Nodo): Referencia al nodo padre
+    
+    Metodos principales:
+        agregar_hijo(hijo): Anade un nodo hijo
+        eliminar_hijo(hijo): Elimina un hijo
+        obtener_ruta(): Devuelve ruta completa desde raiz
+        to_dict(): Serializa a diccionario para JSON
+    """
+
+### Clase arbol
+bash
+class Arbol:
+    """
+    Gestiona la jerarquia completa del sistema de archivos.
+    
+    Componentes:
+        - raiz (Nodo): Nodo raiz del sistema
+        - nodos (Dict[str, Nodo]): Diccionario para busqueda rapida por ID
+        - papelera (PapeleraManager): Gestor de papelera
+        - busqueda (SistemaBusqueda): Sistema de indices para busqueda
+    
+    Operaciones principales:
+        - Crear, eliminar, mover y renombrar nodos
+        - Busquedas por ruta y por ID
+        - Recorridos y estadisticas
+        - Integracion con papelera y sistema de busqueda
+    """
+
+### 2.- Clases de sistemas de busqueda
+bash
+class Trie:
+    """
+    Implementacion de arbol Trie para busqueda por prefijo.
+    Complejidades:
+        - Insercion: O(n) donde n = longitud del nombre
+        - Busqueda por prefijo: O(n + k) donde k = numero de resultados
+        - Eliminacion: O(n)
+    """
+
+class HashMapBusqueda:
+    """
+    HashMap para busqueda exacta case-insensitive.
+    Usa nombres en minuscula como clave.
+    Complejidades:
+        - Insercion: O(1)
+        - Busqueda: O(1)
+        - Eliminacion: O(1)
+    """
+
+class SistemaBusqueda:
+    """
+    Integra Trie y HashMap manteniendo sincronizacion.
+    Garantiza consistencia entre ambos indices.
+    """
+
+## 3.- Persistencia
+bash
+{
+  "raiz": {
+    "id": "abc123",
+    "nombre": "root",
+    "tipo": "carpeta",
+    "contenido": "",
+    "hijos": [
+      {
+        "id": "def456",
+        "nombre": "documentos",
+        "tipo": "carpeta",
+        "contenido": "",
+        "hijos": []
+      }
+    ]
+  },
+  "papelera": {
+    "items": [],
+    "capacidad_maxima": 100,
+    "dias_retencion": 30
+  },
+  "busqueda": {
+    "trie": {...},
+    "hashmap": {...}
+  }
+}
+
+### 4.- Papelera (papelera_manager.py)
+bash
+def limpiar_automaticamente(self):
+    """
+    Elimina items con mas de dias_retencion dias.
+    Recorre la papelera en orden inverso para evitar
+    problemas de indices al eliminar.
+    """
+    ahora = datetime.now()
+    eliminados = 0
+    
+    for i in range(len(self.items) - 1, -1, -1):
+        item = self.items[i]
+        dias_pasados = (ahora - item.fecha_eliminacion).days
+        
+        if dias_pasados > self.dias_retencion:
+            self.items.pop(i)
+            eliminados += 1
+    
+    return eliminados
+
+## Flujos de Datos
+### Creacion de nodo
+1. Usuario: mkdir documentos
+2. CMD_Simulator: Valida ruta y parametros
+3. Arbol.crear_nodo(): 
+   - Busca padre en ruta "/"
+   - Crea nuevo Nodo con ID unico
+   - Agrega a hijos del padre
+4. SistemaBusqueda.indexar_nodo():
+   - Trie.insertar("documentos", id)
+   - HashMap.insertar("documentos", id)
+5. Persistencia.guardar_automatico():
+   - Serializa arbol completo a JSON
+
+### Busqueda por prefijo
+1. Usuario: search doc
+2. Arbol.buscar_autocompletado("doc", 10):
+   - SistemaBusqueda.buscar_autocompletado("doc")
+   - Trie.buscar_prefijo("doc") → [{"palabra": "documento", "id_nodo": "id1"}, ...]
+   - Enriquecer con datos del nodo
+3. Mostrar resultados formateados
+
+## Estrategia de Pruebas
+### Pruebas unitarias
+bash
+class TestSistemaArchivos(unittest.TestCase):
+    # Prueba cada componente de forma aislada
+    def test_crear_carpeta_raiz(self):
+        self.arbol.crear_nodo("documentos", "carpeta", "/")
+        nodo = self.arbol.buscar_por_ruta("/documentos")
+        self.assertIsNotNone(nodo)
+
+### Pruebas de integracion
+bash
+class TestIntegracionCompleta(unittest.TestCase):
+    # Prueba flujos completos entre componentes
+    def test_flujo_completo_creacion_busqueda(self):
+        # Crear estructura
+        # Realizar busquedas
+        # Verificar consistencia
+
+### Pruebas de rendimiento
+bash
+class Benchmark:
+    # Evalua rendimiento con cargas grandes
+    def prueba_insercion_masiva(self, num_nodos=1000):
+        # Mide tiempos y memoria
+
+# Guia de Usuario - Simulador de CMD
+## Iniciar programa
+bash
+    python cmd_simulator.py
+
+## comando basico de ayuda
+    C:\> help
+
+## Conceptos Basicos
+### Rutas
+Ruta absoluta: Comienza con / (ej: /documentos/trabajo)
+
+Ruta relativa: Relativa al directorio actual (ej: trabajo/informe.txt)
+
+.. Directorio padre
+
+. Directorio actual
+
+/ Raiz del sistema
+
+### Tipos de Elementos
+Carpetas ([DIR]): Contenedores que pueden tener hijos
+Archivos ([FILE]): Contienen texto, no pueden tener hijos
+
+
+## Tutorial Paso a Paso
+### 1. Crear una Estructura Basica
+#Crear carpetas principales
+bash
+C:\> mkdir documentos
+C:\> mkdir imagenes
+C:\> mkdir musica
+
+#Navegar a documentos
+C:\> cd documentos
+
+#Crear subcarpetas
+C:\documentos> mkdir personal
+C:\documentos> mkdir trabajo
+
+#Crear archivos
+C:\documentos> touch notas.txt "Mis notas importantes"
+C:\documentos> touch lista.txt "Compras: pan, leche, huevos"
+
+### 2. Explorar el sistema
+bash
+#Ver donde estas
+C:\documentos> pwd
+Ruta: /documentos
+
+#Listar contenido
+C:\documentos> ls
+[DIR]   personal
+[DIR]   trabajo
+[FILE]  notas.txt      (24 bytes)
+[FILE]  lista.txt      (24 bytes)
+
+#Ver estructura completa
+C:\documentos> tree
+documentos/
+├── personal/
+├── trabajo/
+├── notas.txt
+└── lista.txt
+
+### 3. Buscar archivo
+bash
+ #Buscar por prefijo (autocompletado)
+C:\> search not
+Encontrados: 1
+Mostrando: 1
+
+1. [FILE] notas.txt -> /documentos/notas.txt
+
+#Busqueda exacta
+C:\> find lista.txt
+Encontrados: 1
+
+1. [FILE] lista.txt -> /documentos/lista.txt
+    Contenido: Compras: pan, leche, huevos
+
+#Buscar en todo el sistema
+C:\> whereis notas
+Busqueda exacta para: 'notas'
+-------------------------------------------
+[FILE] notas.txt
+    Ruta: /documentos/notas.txt
+    Tamaño: 24 bytes
+
+
+### 4. Ver informacion del sistema
+bash
+#Estadisticas generales
+C:\> stats
+--- ESTADISTICAS DEL SISTEMA ---
+Nodos totales: 8
+Carpetas: 4
+Archivos: 4
+Bytes de contenido: 96
+Altura del arbol: 3
+Elementos en papelera: 0
+
+#Informacion detallada de un elemento
+C:\> info /documentos
+INFORMACION DETALLADA
+--------------------------------------------------
+Nombre: documentos
+Tipo: CARPETA
+Ruta completa: /documentos
+ID unico: abc123
+Hijos directos: 4
+Es raiz: No
+Es hoja: No
+Padre: root
+
+## Especificaciones del programa
+
+### Requerimientos basicos
+- Modelo de nodo con id, nombre, tipo, contenido, children
+- Persistencia en archivo JSON
+- Operaciones: crear, mover, renombrar, eliminar con papelera
+- Listar hijos y mostrar ruta completa
+- Exportar recorrido en preorden
+- Trie para autocompletado
+- Busqueda exacta con HashMap
+- Interfaz consola con comandos tipo mkdir, touch, mv, rm, search, export
+- Pruebas de insercion, eliminacion, busqueda y consistencia
+
+### Caracteristicas extras plementadas
+- Papelera de reciclaje avanzada
+- Sistema de benchmark integrado
+- Autocompletado con TAB
+- Historial de comandos
+- Manejo robusto de errores
+- Pruebas de integracion completas
+- Documentacion profesional
+
+
+## INTEGRANTES
+- Carranza Ibarra Vanya Lucia
+- Sandoval Ramirez Emily Guadalupe
